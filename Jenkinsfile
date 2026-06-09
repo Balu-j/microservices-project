@@ -4,18 +4,20 @@ pipeline {
     stages {
         stage('Deploy To Kubernetes') {
             steps {
-                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'EKS-raham1', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://E6CBBB7EE7AB8AEE69740DA6ACBC786A.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-                    sh "kubectl apply -f deployment-service.yml"
-                    
-                }
+                sh '''
+                kubectl get nodes
+                kubectl create namespace webapps --dry-run=client -o yaml | kubectl apply -f -
+                kubectl apply -f deployment-service.yml -n webapps
+                '''
             }
         }
-        
+
         stage('verify Deployment') {
             steps {
-                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'EKS-raham1', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', serverUrl: 'https://E6CBBB7EE7AB8AEE69740DA6ACBC786A.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-                    sh "kubectl get svc -n webapps"
-                }
+                sh '''
+                kubectl get pods -n webapps
+                kubectl get svc -n webapps
+                '''
             }
         }
     }
